@@ -1,0 +1,19 @@
+{
+    "name": "sorry510/jun",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "sorry510",
+            "email": "491559675@qq.com"
+        }
+    ],
+    "require": {
+        "symfony/http-kernel": "^6.0",
+        "symfony/http-foundation": "^6.0",
+        "symfony/routing": "^6.0"
+    }
+}
