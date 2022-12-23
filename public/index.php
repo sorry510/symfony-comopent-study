@@ -2,39 +2,59 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use App\Simplex\Framework;
+use App\Simplex\GoogleListener;
 use Symfony\Component\Routing\Route;
+use App\Simplex\ContentLengthListener;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\HttpKernel\HttpCache\Esi;
+use Symfony\Component\HttpKernel\HttpCache\Store;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\HttpCache\HttpCache;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Routing\Matcher\CompiledUrlMatcher;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
+use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\Dumper\CompiledUrlMatcherDumper;
 
 $request = Request::createFromGlobals();
-$response = new Response();
+$requestStack = new RequestStack();
 
 $routes = require __DIR__ . '/../app/routers/web.php';
 
-$context = new RequestContext();
-$context->fromRequest($request);
-
-$matcher = new UrlMatcher($routes, $context);
+$controllerResolver = new ControllerResolver();
+$argumentResolver = new ArgumentResolver();
+$matcher = new UrlMatcher($routes, new RequestContext);
 // $matcher = new CompiledUrlMatcher((new CompiledUrlMatcherDumper($routes))->getCompiledRoutes(), $context);
 
+$dispatcher = new EventDispatcher();
+// $dispatcher->addListener('response', [new GoogleListener, 'onResponse']);
+// $dispatcher->addListener('response', [new ContentLengthListener, 'onResponse'], -255); // 数字越大，优先级越高，默认为0
+
+$dispatcher->addSubscriber(new ContentLengthListener());
+$dispatcher->addSubscriber(new GoogleListener());
+
 try {
-    $match = $matcher->match($request->getPathInfo());
-    $request->attributes->add($match);
-    $response = call_user_func($request->attributes->get('_controller'), $request);
+    $app = new Framework($dispatcher, $matcher, $controllerResolver, $argumentResolver);
+    $app = new HttpCache(
+        $app, 
+        new Store(__DIR__ . '/../cache'),
+        new Esi(),
+        ['debug' => true]
+    );
+    $response = $app->handle($request);
 } catch (ResourceNotFoundException $exception) {
-    $response = new Response('Not Found', 404);
+    $response = new Response('Not Found Router Match', 404);
 } catch (\Throwable $e) {
     $response = new Response('An error occurred', 500);
 }
 
 $response->prepare($request)->send();
-
 
 function render_template($request)
 {
