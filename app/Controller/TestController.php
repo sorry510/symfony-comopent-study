@@ -20,4 +20,9 @@ class TestController
         $response->setTtl(10);
         return $response;
     }
+
+    public function hello()
+    {
+        return __METHOD__;
+    }
 }
