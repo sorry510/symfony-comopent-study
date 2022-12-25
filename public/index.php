@@ -3,17 +3,25 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Simplex\Framework;
+use App\Simplex\StringResponseListener;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpCache\Esi;
 use Symfony\Component\HttpKernel\HttpCache\Store;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\HttpCache\HttpCache;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
+$request = Request::createFromGlobals();
+
 try {
-    $request = Request::createFromGlobals();    
-    $routes = require __DIR__ . '/../app/routers/web.php';
-    $app = new Framework($routes);
+    $container = require __DIR__ . '/../app/Simplex/Container.php';
+    
+    $container->register('listener.response.string', StringResponseListener::class);
+    $container->getDefinition('dispatcher')
+        ->addMethodCall('addSubscriber', [new Reference('listener.response.string')]);
+
+    $app = $container->get('framework');
     $app = new HttpCache(
         $app, 
         new Store(__DIR__ . '/../cache'),
@@ -24,7 +32,7 @@ try {
 } catch (ResourceNotFoundException $exception) {
     $response = new Response('Not Found Router Match', 404);
 } catch (\Throwable $e) {
-    $response = new Response('An error occurred', 500);
+    $response = new Response($e->getMessage(), 500);
 }
 
 $response->prepare($request)->send();

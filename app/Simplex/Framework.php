@@ -22,22 +22,22 @@ use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
 
 class Framework extends HttpKernel implements HttpKernelInterface
 {
-    public function __construct($routes)
-    {
-        $context = new RequestContext();
-        $matcher = new UrlMatcher($routes, $context);
-        $requestStack = new RequestStack();
+    // public function __construct($routes)
+    // {
+    //     $context = new RequestContext();
+    //     $matcher = new UrlMatcher($routes, $context);
+    //     $requestStack = new RequestStack();
 
-        $controllerResolver = new ControllerResolver();
-        $argumentResolver = new ArgumentResolver();
+    //     $controllerResolver = new ControllerResolver();
+    //     $argumentResolver = new ArgumentResolver();
 
-        $dispatcher = new EventDispatcher();
-        $dispatcher->addSubscriber(new RouterListener($matcher, $requestStack));
-        $dispatcher->addSubscriber(new ResponseListener('UTF-8'));
-        $dispatcher->addSubscriber(new StringResponseListener());
+    //     $dispatcher = new EventDispatcher();
+    //     $dispatcher->addSubscriber(new RouterListener($matcher, $requestStack));
+    //     $dispatcher->addSubscriber(new ResponseListener('UTF-8'));
+    //     $dispatcher->addSubscriber(new StringResponseListener());
 
-        parent::__construct($dispatcher, $controllerResolver, $requestStack, $argumentResolver);
-    }
+    //     parent::__construct($dispatcher, $controllerResolver, $requestStack, $argumentResolver);
+    // }
 
     // public function handle(Request $request, int $type = HttpKernelInterface::MAIN_REQUEST, $catch = true): Response
     // {

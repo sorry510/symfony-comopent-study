@@ -2,7 +2,6 @@
 
 use App\Controller\TestController;
 use Symfony\Component\Routing\Route;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\RouteCollection;
 
 
